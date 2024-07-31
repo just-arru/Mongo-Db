@@ -1,0 +1,251 @@
+Mongo Db Installation On Ubuntu 24
+
+Note: This Guide covers the installation of the latest 7.0 version of MongoDB, if you need to install any older version then modify the above command accordingly.
+
+To Install MongoDB on Ubuntu 24.04
+First, ensure the gnupg and curl are installed:
+#sudo apt-get install gnupg curl
+
+To import the MongoDB GPG key from the official MongoDB repository, run this command:
+#curl -fsSL https://www.mongodb.org/static/pgp/server-7.0.asc | \
+ sudo gpg -o /usr/share/keyrings/mongodb-server-7.0.gpg \
+ --dearmor
+
+To check if the key is successfully imported or not by navigating to this directory:
+#cd /usr/share/keyrings
+
+Now run the echo command to create the source list for your MongoDB package in Ubuntu 24.04 by running this command:
+#echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
+
+Once you’ve run the command, refresh your server’s software catalog:
+#sudo apt update
+
+Finally, install MongoDB on Ubuntu 24.04:
+#sudo apt install -y mongodb-org
+
+To check MongoDB’s successful installation, run the version command:
+#mongod --version
+
+The MongoDB service is by default disabled on Ubuntu 24.04, to start it run this command:
+#sudo systemctl start mongod
+
+Now run the daemon-reload command:
+#sudo systemctl daemon-reload
+
+Now verify the status of MongoDB, if it successfully started:
+#sudo systemctl status mongod
+
+To enable the MongoDB:
+#sudo systemctl enable mongod
+
+Finally, start the mongosh session by running this command:
+#mongosh
+
+=========================================================================================================================================
+
+
+Log file in MongoDB
+
+In MongoDB, the log files are typically located in different locations depending on your operating system and MongoDB installation method. Here are the common log file locations for MongoDB on various platforms:
+
+1. Linux and Unix-based Systems:
+Default Log Directory (if installed using package manager): /var/log/mongodb/
+Default Log File (if installed using package manager): /var/log/mongodb/mongod.log
+
+2. Windows:
+Default Log Directory (if installed as a service): C:\Program Files\MongoDB\Server\<version>\log\
+Default Log File (if installed as a service): C:\Program Files\MongoDB\Server\<version>\log\mongod.log
+Default Log Directory (if running as a standalone process): The logs are typically located in the same directory where mongod.exe is run from.
+
+3. macOS:
+Default Log Directory (if installed using Homebrew or manually): /usr/local/var/log/mongodb/
+Default Log File (if installed using Homebrew or manually): /usr/local/var/log/mongodb/mongo.log
+
+Please note that the exact paths and file names may vary depending on your MongoDB version and configuration. If you have configured custom log paths or file names in your MongoDB configuration file (typically mongod.conf), the logs will be stored in the locations specified in the configuration.
+
+You can also check the MongoDB configuration file or the command-line options used to start the MongoDB server for log file paths and file names. The systemLog.path configuration option in mongod.conf specifies the log file path.
+
+On Linux/Unix:
+cat /var/log/mongodb/mongod.log
+
+On Windows (PowerShell):
+Get-Content "C:\Program Files\MongoDB\Server\<version>\log\mongod.log"
+
+Replace <version> with your MongoDB version number.
+
+=========================================================================================================================================
+
+Database Management in MongoDB
+
+Connect to MongoDB
+mongo
+
+Switch user 
+use mydatabase
+
+db.createUser({ user: "quickinfra", pwd: "P57BZ6x6D84", roles: [ { role: "dbOwner", db: "tnt" } ] });
+
+Create a Database
+db.createCollection("tnt")
+
+To list database
+show databases
+show dbs
+
+Drop a Database
+db.dropDatabase()
+
+Check Current Database
+db
+
+List Collections in a Database
+show collections
+
+To login as a user 
+mongosh "mongodb://dev_telemetry_reader_1:password@10.130.12.77:27017/telemetry"
+
+=========================================================================================================================================
+
+Table Management in MongoDB
+
+For table/collection list
+Create table
+db.emp.insertOne(
+		{ 
+			item: "canvas", qty: 100, tags: ["cotton"], size: { h: 28, w: 35.5, uom: "cm"}});
+
+Drop table
+db.emp.drop()
+
+;
+db.getCollectionNames()
+
+Count All Documents in a Collection
+db.myCollection.count()
+
+Count Documents Matching a Query — to count documents with a specific field value
+db.myCollection.count({ status: "active" })
+
+Count with Options — to count documents in a collection and skip a certain number of documents 
+db.myCollection.count({}, { skip: 5 })
+
+Retrieve All Documents
+db.myCollection.find()
+
+Retrieve Documents with Projection
+db.myCollection.find({}, { _id: 0, name: 1, age: 1 })
+
+Retrieve a Single Document
+db.myCollection.findOne({ _id: ObjectId("yourObjectId") })
+
+Chained Query Operations
+db.myCollection.find({ age: { $gt: 30 }, status: "active" })
+
+=========================================================================================================================================
+
+User Management in MongoDB
+
+
+Login as admin
+use admin
+
+To list users
+db.getUsers()
+show users
+
+Create a readwrite User 
+use admin
+db.createUser({
+  user: "test",
+  pwd: "WS14Lpaqwr",
+  roles: [
+    { role: "readWrite", db: "iti-prod" },
+   ]
+});
+
+Create admin user
+db.createUser({
+  user: "quickinfra",
+  pwd: "Pman>$4urg",
+  roles: [ { role: "read", db: "telemetry", collection: "test" } ]
+})
+
+Create a read only user
+use admin
+db.createUser({
+  user: "read_user",
+  pwd: "password123",
+  roles: [
+    { role: "read", db: "your_database" }
+    // You can add more roles and databases as needed
+  ]
+});
+
+Drop a user
+use admin
+db.dropUser("myuser");
+
+Grant Permissions (Roles) to a User
+use admin
+db.grantRolesToUser("myuser", [
+  { role: "readWrite", db: "myotherdatabase" }
+]);
+
+To change the user password
+
+Authenticate as an Administrator
+use admin
+db.auth("adminUsername", "adminPassword")
+
+
+Update the User Password — For MongoDB 4.2 and later
+db.getSiblingDB("admin").getCollection("system.users").updateOne(
+  { user: "username" },
+  {
+    $set: {
+      pwd: "newPassword",
+    },
+  }
+)
+
+db.changeUserPassword("username", "new_password")
+
+Set Password Expiration Date
+db.createUser({
+  user: "myuser",
+  pwd: "my_password",
+  roles: ["readWrite"],
+  mechanisms: ["SCRAM-SHA-1"],
+  passwordDigestor: "server",
+  authenticationRestrictions: [{ clientSource: ["192.168.1.0/24"] }],
+  expireAfterSeconds: 2592000, // 30 days in seconds
+  writeConcernMajorityJournalDefault: true,
+});
+
+
+db.createUser({
+  user: "adarsh",
+  pwd: "lkjhgfdsa",
+  roles: ["root"]
+})
+
+=========================================================================================================================================
+
+mongodump --db monthlydata --collection 202211 --out /data/monthly_data_bkp
+
+mongorestore --db monthlydata --collection 202211 /data/monthly_data_bkp/202211.bson
+
+=========================================================================================================================================
+
+Backup and Restore
+
+mongodump --db your_database_name --out /path/to/backup_directory
+
+mongorestore --db your_database_name /path/to/backup_directory/your_database_name
+
+mongorestore --version
+
+mongorestore --host example.com --port 27017 --username admin --password mypassword --authenticationDatabase admin /path/to/backup_directory
+
+
+=========================================================================================================================================
